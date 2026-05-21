@@ -11,9 +11,11 @@ console.log("this file running");
 
 // database connection
 import mongoose from 'mongoose';
-mongoose.connect(process.env.DB_URL)
+mongoose.connect(process.env.DB_URL, {
+    serverSelectionTimeoutMS: 10000,
+})
 .then(() => console.log("database connected"))
-.catch(() => console.log("database not connected"));
+.catch((error) => console.error("database not connected:", error.message));
 
 
 
@@ -60,6 +62,16 @@ app.get('/', (req, res) => {
 });
 
 // route level middleware
+app.get('/health', (req, res) => {
+  const dbStates = ["disconnected", "connected", "connecting", "disconnecting"];
+  const database = dbStates[mongoose.connection.readyState] || "unknown";
+
+  res.status(database === "connected" ? 200 : 503).json({
+    status: "ok",
+    database,
+  });
+});
+
 app.use("/api/user", userRouter);
 
 // Dashboard router
