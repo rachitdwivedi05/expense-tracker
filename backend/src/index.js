@@ -25,10 +25,15 @@ const app = express();
 
 
 app.use(cookieParser());
+const defaultAllowedOrigins = [
+    "https://expense-tracker-nine-indol-48.vercel.app",
+];
+
 const allowedOrigins = (process.env.DOMAIN || "")
     .split(",")
     .map((origin) => origin.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .concat(defaultAllowedOrigins);
 
 app.use(cors({
     origin(origin, callback) {
