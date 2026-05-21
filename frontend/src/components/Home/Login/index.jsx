@@ -3,8 +3,37 @@ import { Card, Input, Form, Button } from "antd";
 const { Item } = Form;
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import http from "../../../utils/http";
+
 
 const Login = () => {
+
+  const navigate = useNavigate();
+
+  const [loginform] = Form.useForm();
+
+  const [loading, setLoading] = useState(false);
+
+
+  const onFinish = async (values) => {
+    try {
+      setLoading(true);
+      const { data } = await http.post("/api/user/login", values);
+      const {role} = data;
+      if (role=== "admin")
+        return navigate("/app/admin/dashboard");
+      if(role === "user")
+         return navigate("/app/user/dashboard");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to send OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex">
       <div className="w-1/2 hidden md:flex items-center justify-center">
@@ -16,61 +45,51 @@ const Login = () => {
             Track Your Expense
           </h2>
 
-          <Form
-          name ="login-form"
-          layout="vertical"
-          >
-            <Item
-            name="email"
-            label="Username"
-            rules={[{ required: true}]}>
-                <Input
+          <Form name="login-form" layout="vertical" onFinish={onFinish} form={loginform}>
+
+
+            <Item name="email" label="Username" rules={[{ required: true }]}>
+              <Input
                 prefix={<UserOutlined />}
                 placeholder="Enter your username"
-                />
+              />
             </Item>
 
-              <Item
-            name="password"
-            label="Password"
-            rules={[{ required: true}]}>
-                <Input.Password
+            <Item name="password" label="Password" rules={[{ required: true }]}>
+              <Input.Password
                 prefix={<LockOutlined />}
                 placeholder="Enter your password"
-                />
+              />
             </Item>
 
             <Item>
-             <Button
-                 type="text"
+              <Button
+                type="text"
                 htmlType="submit"
                 block
                 className="bg-[#FF735C]! text-white! font-bold!"
-                >
+                loading={loading}
+              >
                 Login
-             </Button>
+              </Button>
             </Item>
-
           </Form>
           <div className="flex items-center justify-between">
             <Link
-           to="#"
-           style={{ textDecoration: "underline" }}
-           className="text-[#FF735C]! font-bold!"
+              to="/forgot-password"
+              style={{ textDecoration: "underline" }}
+              className="text-[#FF735C]! font-bold!"
             >
-            Forgot Password
+              Forgot Password
             </Link>
 
             <Link
-           to="/signup"
-           style={{ textDecoration: "underline" }}
-           className="text-[#FF735C]! font-bold!"
-
-
+              to="/signup"
+              style={{ textDecoration: "underline" }}
+              className="text-[#FF735C]! font-bold!"
             >
-            Don't have an account? Register
+              Don't have an account? Register
             </Link>
-
           </div>
         </Card>
       </div>

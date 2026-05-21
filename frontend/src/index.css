@@ -1,1 +1,74 @@
 @import "tailwindcss";
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.ant-card {
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.ant-card-head {
+  min-height: 48px;
+}
+
+.ant-card-extra {
+  max-width: 100%;
+}
+
+.ant-layout {
+  background: #f8fafc;
+}
+
+.ant-table-wrapper .ant-table {
+  border-radius: 8px;
+}
+
+.ant-table-thead > tr > th {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  font-weight: 700 !important;
+}
+
+.ant-btn {
+  border-radius: 6px;
+}
+
+.ant-statistic-title {
+  color: #64748b !important;
+  font-weight: 600;
+}
+
+.ant-statistic-content {
+  font-weight: 700;
+}
+
+.ant-layout-sider-trigger {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .ant-card-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+    padding-block: 12px;
+  }
+
+  .ant-card-extra {
+    margin-inline-start: 0 !important;
+    width: 100%;
+  }
+
+  .ant-modal {
+    max-width: calc(100vw - 24px);
+  }
+}

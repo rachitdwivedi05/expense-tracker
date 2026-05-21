@@ -4,11 +4,13 @@ import jwt from 'jsonwebtoken';
 import { sendMail } from '../utils/mail.js';
 import { otpTemplate } from '../utils/otp.template.js';
 import { generateOTP } from '../utils/generate.otp.js';
+import { forgotPasswordTemplate } from '../utils/forgot-template.js';
+// import { use } from 'react';
 
 
 const createToken = async(user) => {
     const payload = {
-        Id: user._id,
+        id: user._id,
         fullname: user.fullname,
         email: user.email,
         role: user.role
@@ -35,7 +37,14 @@ export const sendEmail = async (req, res) => {
     try {
         const {email} = req.body;
         const OTP = generateOTP();
-       await sendMail(email, "OTP For Signup",otpTemplate(OTP));
+        const isEmail = await UserModel.findOne({email});
+        if(isEmail){
+            return  res.status(400).json({message: "Email already registered !"});
+        }
+       const sent = await sendMail(email, "OTP For Signup",otpTemplate(OTP));
+       if(!sent.success){
+            return res.status(500).json({message: sent.error || "Failed to send OTP !"});
+       }
         res.json({
             message: "Email sent successfully",
             otp : OTP,
@@ -50,23 +59,124 @@ export const login = async (req, res) => {
     try {
         const {email, password} = req.body;
         const user = await UserModel.findOne({email});
-        if(!user){
+        if(!user)
             return res.status(404).json({message: "user not found !"});
-        }
+
+            if(!user.status)
+            return res.status(404).json({message: "You are not active Member !"});
+        
         const isLogged = await bcrypt.compare(password, user.password);
         if(!isLogged)
             return  res.status(401).json({message: "incorrect password !"});
 
         const token = await createToken(user);
         res.cookie('auth_token', token, {
-           maxAge: 24 * 60 * 60 * 1000,
-           domain: process.env.ENVIRONMENT === 'DEV' ? 'localhost' : process.env.DOMAIN,
-           secure : process.env.ENVIRONMENT === 'DEV' ? false : true,
-           httpOnly: true
+          httpOnly: true,
+          secure: process.env.ENVIRONMENT !== "DEV",
+          sameSite : process.env.ENVIRONMENT === "DEV" ? "lax" : "none",
+          path : "/",
+          domain: undefined,
+          maxAge: 86400000,
         });
-        res.json({message: "login successful"});
+        res.json({message: "login successful", role: user.role});
         
       } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+}
+
+export const logout = async (req, res) => {
+    try {
+        res.cookie("auth_token", null, {
+        httpOnly: true,
+        secure: process.env.ENVIRONMENT !== "DEV",
+        sameSite: process.env.ENVIRONMENT === "DEV" ? "lax" : "none",
+        path : "/",
+        domain: undefined,
+        maxAge: 0,
+    });
+    res.status(200).json({message: "Logout successful"});
+      } catch (error) {
+        res.status(401).json({ message: error.message || "Logout Failed"});
+    }
+}
+
+export const forgotPassword = async (req, res) => {
+    try {
+        const {email} = req.body;
+        const user = await UserModel.findOne({email});
+        if(!user){
+            return res.status(404).json({message: "user not found !"});
+        }
+        const token = await jwt.sign({Id: user._id},process.env.FORGOT_TOKEN_SECRET, {expiresIn: '15m'});
+        const frontendUrl = process.env.DOMAIN?.trim() || "http://localhost:5180";
+        const link = `${frontendUrl}/forgot-password?token=${token}`;
+        const sent = await sendMail(
+            email,
+           "Expense - Forgot Password ?", forgotPasswordTemplate(user.fullname, link)
+        );
+        if(!sent.success){
+            return res.status(500).json({message: sent.error || "Failed to send email !"});
+        }
+        res.json({message: "Please check your email for reset link"});
+        
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+
+
+export const verifyToken = async (req, res) => {
+    try {
+       res.json("Verification success");
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+}
+
+
+export const changePassword = async (req, res) => {
+    try {
+        const {password} = req.body;
+        const encrypted = await bcrypt.hash(password.toString(),12);
+        await UserModel.findByIdAndUpdate(req.user.Id, {password: encrypted});
+        res.json("Password updated successfully");
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+}
+
+
+export const getAllUsers = async (req, res) => {
+    try {
+         const { page=1 ,limit=5}= req.query;
+         const pageNumber = parseInt(page);
+const limitNumber = parseInt(limit);
+        const skip = (pageNumber - 1) * limitNumber;
+         const users = await UserModel.find().sort({createdAt: -1})
+         .skip(skip).limit(limitNumber);
+          const total = await UserModel.countDocuments();
+         res.json({
+            data : users,
+            total
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message || "Internal Server error"})
+    }
+}
+
+
+export const updateStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        const { id } = req.params;
+        const user = await UserModel.findByIdAndUpdate(id, { status }, {new: true});
+        if(!user)          
+            return res.status(404).json({message: "User not found !",
+            user});
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ message: err.message || "Internal Server error"})
     }
 }
