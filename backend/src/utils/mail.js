@@ -11,6 +11,9 @@ export const sendMail = async (email, subject, template) => {
 
         const config = nodemailer.createTransport({
             service : "gmail",
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 15000,
             auth : {
                 user : senderEmail,
                 pass : senderPassword

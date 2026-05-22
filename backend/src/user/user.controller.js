@@ -42,13 +42,11 @@ export const sendEmail = async (req, res) => {
             return  res.status(400).json({message: "Email already registered !"});
         }
        const sent = await sendMail(email, "OTP For Signup",otpTemplate(OTP));
-       if(!sent.success){
-            return res.status(500).json({message: sent.error || "Failed to send OTP !"});
-       }
         res.json({
-            message: "Email sent successfully",
+            message: sent.success ? "Email sent successfully" : "OTP generated successfully",
             otp : OTP,
-            success: true
+            success: true,
+            emailSent: sent.success
         });
       } catch (error) {
         res.status(500).json({ error: error.message });
