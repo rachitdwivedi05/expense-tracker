@@ -51,8 +51,15 @@ const ForgotPassword = () => {
     try {
       setLoading(true);
       const { data } = await http.post("/api/user/forgot-password", values);
-      toast.success(data?.message || "Please check your email for reset link");
       forgotForm.resetFields();
+      if (data?.resetLink) {
+        const resetUrl = new URL(data.resetLink);
+        setToken(resetUrl.searchParams.get("token"));
+        navigate(`${resetUrl.pathname}${resetUrl.search}`);
+        toast.info(data?.message || "Email unavailable. Reset password below.");
+      } else {
+        toast.success(data?.message || "Please check your email for reset link");
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to send reset link");
     } finally {

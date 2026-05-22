@@ -59,7 +59,12 @@ export const sendEmail = async (req, res) => {
         }
        const sent = await sendMail(email, "OTP For Signup",otpTemplate(OTP));
         if(!sent.success){
-            return res.status(500).json({message: sent.error || "Failed to send OTP email"});
+            return res.json({
+                message: "Email service unavailable. Use OTP shown on screen.",
+                otp : OTP,
+                success: true,
+                emailSent: false
+            });
         }
         res.json({
             message: "Email sent successfully",
@@ -134,9 +139,13 @@ export const forgotPassword = async (req, res) => {
            "Expense - Forgot Password ?", forgotPasswordTemplate(user.fullname, link)
         );
         if(!sent.success){
-            return res.status(500).json({message: sent.error || "Failed to send email !"});
+            return res.json({
+                message: "Email service unavailable. Reset password below.",
+                resetLink: link,
+                emailSent: false
+            });
         }
-        res.json({message: "Please check your email for reset link"});
+        res.json({message: "Please check your email for reset link", emailSent: true});
         
       } catch (error) {
         res.status(500).json({ error: error.message });
