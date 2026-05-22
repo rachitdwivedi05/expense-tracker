@@ -19,6 +19,7 @@ const userSchema = new Schema({
         type : String,
         required : true,
         trim : true,
+        lowercase : true,
         unique : true
     },
 
@@ -41,6 +42,7 @@ const userSchema = new Schema({
 },{timestamps: true});
 
 userSchema.pre('save',async function(){
+    if(!this.isModified('password')) return;
     const hashedPassword = await bcrypt.hash(this.password.toString(), 12);  
     this.password = hashedPassword;
  }); 

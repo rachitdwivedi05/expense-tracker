@@ -7,6 +7,12 @@ import { generateOTP } from '../utils/generate.otp.js';
 import { forgotPasswordTemplate } from '../utils/forgot-template.js';
 // import { use } from 'react';
 
+const normalizeEmail = (email = "") => email.toString().trim().toLowerCase();
+
+const getFrontendUrl = () => {
+    const configuredUrl = process.env.FRONTEND_URL || process.env.DOMAIN || "http://localhost:5180";
+    return configuredUrl.split(",")[0].trim().replace(/\/$/, "");
+}
 
 const createToken = async(user) => {
     const payload = {
@@ -24,7 +30,14 @@ const createToken = async(user) => {
 
 export const createUser = async (req, res) => {
     try {
-        const data = req.body;
+        const data = {
+            ...req.body,
+            email: normalizeEmail(req.body.email)
+        };
+        const exists = await UserModel.findOne({email: data.email});
+        if(exists){
+            return res.status(409).json({message: "Email already registered !"});
+        }
         const user = new UserModel(data);
         await user.save();
         res.json(user);
@@ -35,15 +48,21 @@ export const createUser = async (req, res) => {
 
 export const sendEmail = async (req, res) => {
     try {
-        const {email} = req.body;
+        const email = normalizeEmail(req.body.email);
+        if(!email){
+            return res.status(400).json({message: "Email is required"});
+        }
         const OTP = generateOTP();
         const isEmail = await UserModel.findOne({email});
         if(isEmail){
             return  res.status(400).json({message: "Email already registered !"});
         }
        const sent = await sendMail(email, "OTP For Signup",otpTemplate(OTP));
+        if(!sent.success){
+            return res.status(500).json({message: sent.error || "Failed to send OTP email"});
+        }
         res.json({
-            message: sent.success ? "Email sent successfully" : "OTP generated successfully",
+            message: "Email sent successfully",
             otp : OTP,
             success: true,
             emailSent: sent.success
@@ -55,7 +74,8 @@ export const sendEmail = async (req, res) => {
 
 export const login = async (req, res) => {
     try {
-        const {email, password} = req.body;
+        const {password} = req.body;
+        const email = normalizeEmail(req.body.email);
         const user = await UserModel.findOne({email});
         if(!user)
             return res.status(404).json({message: "user not found !"});
@@ -101,13 +121,13 @@ export const logout = async (req, res) => {
 
 export const forgotPassword = async (req, res) => {
     try {
-        const {email} = req.body;
+        const email = normalizeEmail(req.body.email);
         const user = await UserModel.findOne({email});
         if(!user){
             return res.status(404).json({message: "user not found !"});
         }
         const token = await jwt.sign({Id: user._id},process.env.FORGOT_TOKEN_SECRET, {expiresIn: '15m'});
-        const frontendUrl = process.env.DOMAIN?.trim() || "http://localhost:5180";
+        const frontendUrl = getFrontendUrl();
         const link = `${frontendUrl}/forgot-password?token=${token}`;
         const sent = await sendMail(
             email,
