@@ -20,7 +20,13 @@ const Signup = () => {
       const { data } = await http.post("/api/user/send-mail", values);
       setOtp(data.otp);
       setFormData(values);
-      toast.success("OTP sent to your email!"); // Default alert ki jagah toast
+      if (data.emailSent === false) {
+        toast.info(`Email service unavailable. Use OTP: ${data.otp}`, {
+          autoClose: 15000,
+        });
+      } else {
+        toast.success("OTP sent to your email!"); // Default alert ki jagah toast
+      }
     } catch (error) {
       setOtp(null);
       setFormData(null);
