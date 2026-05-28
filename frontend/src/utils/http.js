@@ -1,14 +1,17 @@
 import axios from "axios";
 
-// Vercel injects VITE_API_URL at build time, for example https://your-api.onrender.com.
-const baseURL = import.meta.env.VITE_API_URL;
+// Vite exposes only VITE_* variables to the browser; Vercel injects this at build time.
+const configuredApiUrl = import.meta.env.VITE_API_URL;
 
-if (!baseURL) {
-  console.warn("VITE_API_URL is missing. API requests will use the current origin.");
-}
+// Keep local development working, but never let production fall back to the Vercel origin.
+const fallbackApiUrl = import.meta.env.DEV
+  ? "http://localhost:5000"
+  : "https://expense-tracker-5ak5.onrender.com";
+
+const baseURL = (configuredApiUrl || fallbackApiUrl).replace(/\/+$/, "");
 
 const http = axios.create({
-  baseURL: baseURL || "",
+  baseURL,
   withCredentials: true
 });
 
