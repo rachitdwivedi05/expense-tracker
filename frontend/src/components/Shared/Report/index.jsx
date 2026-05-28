@@ -21,7 +21,7 @@ import {
   YAxis,
 } from "recharts";
 import { toast } from "react-toastify";
-import http from "../../../utils/http";
+import http, { apiUrl } from "../../../utils/http";
 import { formatDate } from "../../../utils/date";
 import Loader from "../Loader";
 
@@ -62,7 +62,7 @@ const Report = () => {
     const loadReport = async () => {
       try {
         setLoading(true);
-        const { data } = await http.get("/api/dashboard/report");
+        const { data } = await http.get(apiUrl("/api/dashboard/report"));
         setReport(data);
       } catch (err) {
         toast.error(err?.response?.data?.message || "Failed to load reports");

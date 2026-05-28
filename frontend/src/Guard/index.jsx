@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import http from "../utils/http";
+import http, { apiUrl } from "../utils/http";
 import { Navigate, Outlet } from "react-router-dom";
 import Loader from "../components/Shared/Loader";
 
@@ -12,7 +12,7 @@ const Guard = ({endpoint,role,children}) => {
     useEffect(() => {
         const verifyToken = async() => {
             try {
-                const {data} = await http.get(endpoint);
+                const {data} = await http.get(apiUrl(endpoint));
             sessionStorage.setItem("userInfo", JSON.stringify(data));
             setUser(data?.role);
             setLoader(false);

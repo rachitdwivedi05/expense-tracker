@@ -2,7 +2,7 @@ import { DeleteOutlined, DownloadOutlined, EditOutlined, SearchOutlined } from "
 import { Button, Card, Empty, Form, Input, InputNumber, Modal, Popconfirm, Select, Statistic, Table, Tag } from "antd";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import http from "../../../utils/http";
+import http, { apiUrl } from "../../../utils/http";
 import { formatDate } from "../../../utils/date";
 
 const { Item } = Form;
@@ -78,7 +78,7 @@ const Transactions = () => {
          if (activeFilters.type !== "all") params.set("type", activeFilters.type);
          if (activeFilters.paymentMethod !== "all") params.set("paymentMethod", activeFilters.paymentMethod);
 
-         const res = await http.get(`/api/transaction/get?${params.toString()}`);  
+         const res = await http.get(apiUrl(`/api/transaction/get?${params.toString()}`));  
          
          const { data, total } = res.data;
             setTransactions(data);
@@ -108,7 +108,7 @@ const Transactions = () => {
     const onFinish = async (values) => {
         try {
             setLoading(true);
-            await http.post("/api/transaction/create", values);
+            await http.post(apiUrl("/api/transaction/create"), values);
             toast.success("Transaction created successfully !");
             setModal(false);
             transactionForm.resetFields();
@@ -125,7 +125,7 @@ const Transactions = () => {
     const onUpdate = async (values) => {
         try {
             setLoading(true);
-            await http.put(`/api/transaction/update/${edit._id}`, values);
+            await http.put(apiUrl(`/api/transaction/update/${edit._id}`), values);
             toast.success("Transaction updated successfully !");
             setModal(false);
             transactionForm.resetFields();
@@ -144,7 +144,7 @@ const Transactions = () => {
     const onDelete = async (id) => {
         try {
             setLoading(true);
-            await http.delete(`/api/transaction/delete/${id}`);
+            await http.delete(apiUrl(`/api/transaction/delete/${id}`));
             toast.success("Transaction deleted successfully !");
             setModal(false);
             transactionForm.resetFields();

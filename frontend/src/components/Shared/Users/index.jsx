@@ -2,7 +2,7 @@ import { EyeInvisibleFilled, EyeOutlined, SearchOutlined } from "@ant-design/ico
 import { Button, Card, Empty, Input, Statistic, Table, Tag } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import http from "../../../utils/http";
+import http, { apiUrl } from "../../../utils/http";
 import { formatDate } from "../../../utils/date";
 
 const Users = () => {
@@ -32,7 +32,7 @@ const Users = () => {
   const fetchUsers = async (page = 1, pageSize = 5) => {
     try {
       setLoading(true);
-      const res = await http.get(`/api/user/get?page=${page}&limit=${pageSize}`);
+      const res = await http.get(apiUrl(`/api/user/get?page=${page}&limit=${pageSize}`));
       const { data, total } = res.data;
       setUsers(data);
       setPagination({
@@ -54,7 +54,7 @@ const Users = () => {
   const onStatus = async (obj) => {
     try {
       setLoading(true);
-      await http.put(`/api/user/status/${obj._id}`, { status: !obj.status });
+      await http.put(apiUrl(`/api/user/status/${obj._id}`), { status: !obj.status });
       toast.success("status updated successfully !");
       setRefreshKey(refreshKey + 1);
     } catch (err) {

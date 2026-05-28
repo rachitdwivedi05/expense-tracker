@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import Homelayout from "../../../layout/Homelayout";
-import http from "../../../utils/http";
+import http, { apiUrl } from "../../../utils/http";
 
 
 const ForgotPassword = () => {
@@ -35,7 +35,7 @@ const ForgotPassword = () => {
   // console.log("verify api called");
   
     try{
-        await http.post("/api/user/verify-token",{},{
+        await http.post(apiUrl("/api/user/verify-token"),{},{
             headers : {
                 Authorization : `Bearer ${tok}`
             }
@@ -50,7 +50,7 @@ const ForgotPassword = () => {
   const onFinish = async (values) => {
     try {
       setLoading(true);
-      const { data } = await http.post("/api/user/forgot-password", values);
+      const { data } = await http.post(apiUrl("/api/user/forgot-password"), values);
       toast.success(data?.message || "Please check your email for reset link");
       forgotForm.resetFields();
     } catch (error) {
@@ -67,7 +67,7 @@ const ForgotPassword = () => {
         return toast.error("Password and Re-Password should be same !");
       
       setLoading(true);
-      await http.put("/api/user/change-password", values,
+      await http.put(apiUrl("/api/user/change-password"), values,
        {
             headers : {
                 Authorization : `Bearer ${params.get("token")}`

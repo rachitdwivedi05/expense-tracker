@@ -8,10 +8,13 @@ const fallbackApiUrl = import.meta.env.DEV
   ? "http://localhost:5000"
   : "https://expense-tracker-5ak5.onrender.com";
 
-const baseURL = (configuredApiUrl || fallbackApiUrl).replace(/\/+$/, "");
+export const API_BASE_URL = (configuredApiUrl || fallbackApiUrl).replace(/\/+$/, "");
+
+// Builds absolute backend URLs so Vercel never handles API requests as frontend routes.
+export const apiUrl = (path) => `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 
 const http = axios.create({
-  baseURL,
+  baseURL: API_BASE_URL,
   withCredentials: true
 });
 

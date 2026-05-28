@@ -9,7 +9,7 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import http from "../../../utils/http";
+import http, { apiUrl } from "../../../utils/http";
 import Loader from "../Loader";
 import DailyTransactionChart from "../DailyTransactions";
 import { formatDate } from "../../../utils/date";
@@ -66,7 +66,7 @@ const Dashboard = () => {
     try {
       setLoading(true);
       setError(false);
-      const { data } = await http.get("/api/dashboard/report");
+      const { data } = await http.get(apiUrl("/api/dashboard/report"));
       setReport(data);
     } catch (err) {
       setError(true);
