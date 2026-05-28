@@ -30,17 +30,37 @@ const app = express();
 app.use(cookieParser());
 const localOrigins = ["http://localhost:5173", "http://localhost:5180", "http://127.0.0.1:5173", "http://127.0.0.1:5180"];
 const allowedOrigins = getClientOrigins().concat(isProduction ? [] : localOrigins);
+const allowedMethods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"];
 
-app.use(cors({
+const isAllowedOrigin = (origin) => {
+    if (!origin) return true;
+
+    try {
+        const { hostname } = new URL(origin);
+
+        // Allow configured production domains and Vercel preview redeploy URLs.
+        return allowedOrigins.includes(origin) || hostname === "vercel.app" || hostname.endsWith(".vercel.app");
+    } catch {
+        return false;
+    }
+};
+
+const corsOptions = {
     origin(origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (isAllowedOrigin(origin)) {
             return callback(null, true);
         }
 
         return callback(new Error("Not allowed by CORS"));
     },
-    credentials: true
-}));
+    credentials: true,
+    methods: allowedMethods,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 
 app.use(morgan('dev'));
