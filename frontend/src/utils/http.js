@@ -1,11 +1,14 @@
 import axios from "axios";
 
-const baseURL =
-  import.meta.env.VITE_BASE_URL ||
-  "https://expense-tracker-1-38ik.onrender.com";
+// Vercel injects VITE_API_URL at build time, for example https://your-api.onrender.com.
+const baseURL = import.meta.env.VITE_API_URL;
+
+if (!baseURL) {
+  console.warn("VITE_API_URL is missing. API requests will use the current origin.");
+}
 
 const http = axios.create({
-  baseURL,
+  baseURL: baseURL || "",
   withCredentials: true
 });
 

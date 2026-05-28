@@ -1,17 +1,18 @@
 import express from 'express';
 import userRouter from './user/user.routes.js';
-import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import TransactionRouter from './transaction/transaction.route.js';
 import DashboardRouter from './dashboard/dashboard.route.js';
+import { assertRequiredEnv, getClientOrigins, isProduction, mongoUri } from './config/env.js';
 
-dotenv.config();
+assertRequiredEnv();
 console.log("this file running");
 
 // database connection
 import mongoose from 'mongoose';
-mongoose.connect(process.env.DB_URL, {
+// Render/Atlas use MONGO_URI; connection timeout prevents long startup hangs on bad env values.
+mongoose.connect(mongoUri, {
     serverSelectionTimeoutMS: 10000,
 })
 .then(() => console.log("database connected"))
@@ -27,15 +28,8 @@ const app = express();
 
 
 app.use(cookieParser());
-const defaultAllowedOrigins = [
-    "https://expense-tracker-nine-indol-48.vercel.app",
-];
-
-const allowedOrigins = (process.env.DOMAIN || "")
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean)
-    .concat(defaultAllowedOrigins);
+const localOrigins = ["http://localhost:5173", "http://localhost:5180", "http://127.0.0.1:5173", "http://127.0.0.1:5180"];
+const allowedOrigins = getClientOrigins().concat(isProduction ? [] : localOrigins);
 
 app.use(cors({
     origin(origin, callback) {
@@ -80,5 +74,14 @@ app.use("/api/dashboard", DashboardRouter);
 // transaction route
 app.use("/api/transaction", TransactionRouter);
 
-const PORT = process.env.PORT || 3030;
+// Keep production errors consistent without leaking stack traces to the browser.
+app.use((err, req, res, next) => {
+    console.error(err.message);
+    res.status(err.status || 500).json({
+        message: isProduction ? "Internal Server Error" : err.message,
+    });
+});
+
+// Render injects PORT; 5000 is the local fallback requested for production readiness.
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`server is running on ${PORT}`));

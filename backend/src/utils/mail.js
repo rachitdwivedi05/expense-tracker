@@ -3,19 +3,17 @@ import nodemailer from 'nodemailer';
 export const sendMail = async (email, subject, template) => {
     try {
         const senderEmail = process.env.SENDER_EMAIL?.trim();
-        const senderPassword = process.env.SENDER_PASSWORD?.replace(/\s+/g, "");
+        const senderPassword = process.env.SENDER_PASSWORD?.trim();
 
         if (!senderEmail || !senderPassword) {
             throw new Error("Email sender credentials are missing");
         }
 
         const config = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 465,
-            secure: true,
-            connectionTimeout: 30000,
-            greetingTimeout: 30000,
-            socketTimeout: 30000,
+            service : "gmail",
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 15000,
             auth : {
                 user : senderEmail,
                 pass : senderPassword

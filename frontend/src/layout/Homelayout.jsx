@@ -1,6 +1,6 @@
 import { Layout, theme } from "antd";
 
-const { Header, Footer, Content } = Layout;
+const { Header, Content } = Layout;
 
 const Homelayout = ({ children }) => {
   const {
@@ -25,11 +25,6 @@ const Homelayout = ({ children }) => {
       >
         {children}
       </Content>
-      <Footer className="bg-[#FF735C]! flex items-center justify-center">
-          <h1 className="text-white twxt-lg md:text-3xl font-bold text-center">
-          Footer
-        </h1>
-      </Footer>
     </Layout>
   );
 };

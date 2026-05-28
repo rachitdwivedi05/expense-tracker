@@ -5,14 +5,9 @@ import { sendMail } from '../utils/mail.js';
 import { otpTemplate } from '../utils/otp.template.js';
 import { generateOTP } from '../utils/generate.otp.js';
 import { forgotPasswordTemplate } from '../utils/forgot-template.js';
+import { clientUrl, forgotTokenSecret, isProduction, jwtSecret } from '../config/env.js';
 // import { use } from 'react';
 
-const normalizeEmail = (email = "") => email.toString().trim().toLowerCase();
-
-const getFrontendUrl = () => {
-    const configuredUrl = process.env.FRONTEND_URL || process.env.DOMAIN || "http://localhost:5180";
-    return configuredUrl.split(",")[0].trim().replace(/\/$/, "");
-}
 
 const createToken = async(user) => {
     const payload = {
@@ -22,7 +17,7 @@ const createToken = async(user) => {
         role: user.role
     };
 
-    const token = jwt.sign(payload, process.env.AUTH_SECRET, {expiresIn: '1d'});
+    const token = jwt.sign(payload, jwtSecret, {expiresIn: '1d'});
     return token;
 
 }
@@ -30,17 +25,19 @@ const createToken = async(user) => {
 
 export const createUser = async (req, res) => {
     try {
-        const data = {
-            ...req.body,
-            email: normalizeEmail(req.body.email)
-        };
-        const exists = await UserModel.findOne({email: data.email});
-        if(exists){
-            return res.status(409).json({message: "Email already registered !"});
-        }
+        const data = req.body;
         const user = new UserModel(data);
         await user.save();
-        res.json(user);
+        const token = await createToken(user);
+        res.cookie('auth_token', token, {
+          httpOnly: true,
+          secure: isProduction,
+          sameSite : isProduction ? "none" : "lax",
+          path : "/",
+          domain: undefined,
+          maxAge: 86400000,
+        });
+        res.json({message: "signup successful", role: user.role});
       } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -48,26 +45,15 @@ export const createUser = async (req, res) => {
 
 export const sendEmail = async (req, res) => {
     try {
-        const email = normalizeEmail(req.body.email);
-        if(!email){
-            return res.status(400).json({message: "Email is required"});
-        }
+        const {email} = req.body;
         const OTP = generateOTP();
         const isEmail = await UserModel.findOne({email});
         if(isEmail){
             return  res.status(400).json({message: "Email already registered !"});
         }
        const sent = await sendMail(email, "OTP For Signup",otpTemplate(OTP));
-        if(!sent.success){
-            return res.json({
-                message: "Email service unavailable. Use OTP shown on screen.",
-                otp : OTP,
-                success: true,
-                emailSent: false
-            });
-        }
         res.json({
-            message: "Email sent successfully",
+            message: sent.success ? "Email sent successfully" : "OTP generated successfully",
             otp : OTP,
             success: true,
             emailSent: sent.success
@@ -79,8 +65,7 @@ export const sendEmail = async (req, res) => {
 
 export const login = async (req, res) => {
     try {
-        const {password} = req.body;
-        const email = normalizeEmail(req.body.email);
+        const {email, password} = req.body;
         const user = await UserModel.findOne({email});
         if(!user)
             return res.status(404).json({message: "user not found !"});
@@ -95,8 +80,8 @@ export const login = async (req, res) => {
         const token = await createToken(user);
         res.cookie('auth_token', token, {
           httpOnly: true,
-          secure: process.env.ENVIRONMENT !== "DEV",
-          sameSite : process.env.ENVIRONMENT === "DEV" ? "lax" : "none",
+          secure: isProduction,
+          sameSite : isProduction ? "none" : "lax",
           path : "/",
           domain: undefined,
           maxAge: 86400000,
@@ -112,8 +97,8 @@ export const logout = async (req, res) => {
     try {
         res.cookie("auth_token", null, {
         httpOnly: true,
-        secure: process.env.ENVIRONMENT !== "DEV",
-        sameSite: process.env.ENVIRONMENT === "DEV" ? "lax" : "none",
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
         path : "/",
         domain: undefined,
         maxAge: 0,
@@ -126,26 +111,24 @@ export const logout = async (req, res) => {
 
 export const forgotPassword = async (req, res) => {
     try {
-        const email = normalizeEmail(req.body.email);
+        const {email} = req.body;
         const user = await UserModel.findOne({email});
         if(!user){
             return res.status(404).json({message: "user not found !"});
         }
-        const token = await jwt.sign({Id: user._id},process.env.FORGOT_TOKEN_SECRET, {expiresIn: '15m'});
-        const frontendUrl = getFrontendUrl();
+        const token = await jwt.sign({Id: user._id}, forgotTokenSecret, {expiresIn: '15m'});
+        const frontendUrl = clientUrl
+            .split(",")[0]
+            .trim();
         const link = `${frontendUrl}/forgot-password?token=${token}`;
         const sent = await sendMail(
             email,
            "Expense - Forgot Password ?", forgotPasswordTemplate(user.fullname, link)
         );
         if(!sent.success){
-            return res.json({
-                message: "Email service unavailable. Reset password below.",
-                resetLink: link,
-                emailSent: false
-            });
+            return res.status(500).json({message: sent.error || "Failed to send email !"});
         }
-        res.json({message: "Please check your email for reset link", emailSent: true});
+        res.json({message: "Please check your email for reset link"});
         
       } catch (error) {
         res.status(500).json({ error: error.message });
