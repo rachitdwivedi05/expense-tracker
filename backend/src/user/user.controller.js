@@ -78,6 +78,7 @@ export const login = async (req, res) => {
             return  res.status(401).json({message: "incorrect password !"});
 
         const token = await createToken(user);
+        console.log("LOGIN TOKEN:", token);
         res.cookie('auth_token', token, {
           httpOnly: true,
           secure: isProduction,
@@ -86,6 +87,7 @@ export const login = async (req, res) => {
           domain: undefined,
           maxAge: 86400000,
         });
+        console.log("SET COOKIE auth_token");
         res.json({message: "login successful", role: user.role});
         
       } catch (error) {
