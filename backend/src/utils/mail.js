@@ -1,41 +1,33 @@
+import nodemailer from "nodemailer";
+import { emailPass, emailUser } from "../config/env.js";
+
+const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+        user: emailUser,
+        pass: emailPass,
+    },
+});
+
 export const sendMail = async (email, subject, html) => {
     try {
-        const resendApiKey = process.env.RESEND_API_KEY?.trim();
-        const fromEmail = process.env.FROM_EMAIL?.trim();
-
-        if (!resendApiKey || !fromEmail) {
-            throw new Error("Resend email credentials are missing");
+        if (!emailUser || !emailPass) {
+            throw new Error("Gmail SMTP credentials are missing");
         }
 
-        const response = await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${resendApiKey}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                from: fromEmail,
-                to: email,
-                subject,
-                html,
-            }),
+        const info = await transporter.sendMail({
+            from: emailUser,
+            to: email,
+            subject,
+            html,
         });
 
-        const result = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-            console.error("sendMail fail:", {
-                status: response.status,
-                error: result,
-            });
-            throw new Error(result.message || `Resend request failed with status ${response.status}`);
-        }
-
-        console.log("sendMail success:", result);
+        console.log("sendMail success:", info.messageId);
         return { success: true };
-
     } catch (error) {
         console.error("Mail send failed:", error.message);
         return { success: false, error: error.message };
     }
-}
+};

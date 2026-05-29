@@ -1,7 +1,8 @@
-import env from "dotenv";
-env.config();
+import { emailUser } from "../config/env.js";
 
 export const forgotPasswordTemplate = (fullname,link) => {
+    const supportEmail = emailUser || "";
+
     return `
     
     <!-- Paste this as the HTML body of your email -->
@@ -78,7 +79,7 @@ export const forgotPasswordTemplate = (fullname,link) => {
                 </p>
 
                 <p style="margin:0;font-size:14px;line-height:1.5;color:#6b7280;">
-                  If you didn't request a password reset, you can safely ignore this email or <a href="mailto:{{}}" style="color:#0366d6;text-decoration:underline;">contact support</a>.
+                  If you didn't request a password reset, you can safely ignore this email or <a href="mailto:${supportEmail}" style="color:#0366d6;text-decoration:underline;">contact support</a>.
                 </p>
               </td>
             </tr>
@@ -87,8 +88,8 @@ export const forgotPasswordTemplate = (fullname,link) => {
             <tr>
               <td style="padding:18px 24px;background:#f8fafc;color:#9ca3af;font-size:13px;text-align:center;">
                 <div style="margin-bottom:8px;">Thanks, <strong>Expense</strong></div>
-                <div style="color:#9ca3af">If you need help, email <a href="mailto:${process.env.FROM_EMAIL}" style="color:#9ca3af;text-decoration:underline;">
-                ${process.env.FROM_EMAIL}</a>
+                <div style="color:#9ca3af">If you need help, email <a href="mailto:${supportEmail}" style="color:#9ca3af;text-decoration:underline;">
+                ${supportEmail}</a>
                 </div>
                 <div style="margin-top:12px;font-size:12px;color:#cbd5e1;">
                   This link expires in 1 hour. For security, do not share this email.
