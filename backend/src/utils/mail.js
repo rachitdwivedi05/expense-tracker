@@ -1,41 +1,38 @@
-import nodemailer from 'nodemailer';
-
-export const sendMail = async (email, subject, template) => {
+export const sendMail = async (email, subject, html) => {
     try {
         console.log("sendMail start");
-        const senderEmail = process.env.SENDER_EMAIL?.trim();
-        const senderPassword = process.env.SENDER_PASSWORD?.trim();
+        const resendApiKey = process.env.RESEND_API_KEY?.trim();
+        const fromEmail = process.env.FROM_EMAIL?.trim();
 
-        if (!senderEmail || !senderPassword) {
-            throw new Error("Email sender credentials are missing");
+        if (!resendApiKey || !fromEmail) {
+            throw new Error("Resend email credentials are missing");
         }
 
-        const config = nodemailer.createTransport({
-            service : "gmail",
-            connectionTimeout: 30000,
-            greetingTimeout: 30000,
-            socketTimeout: 30000,
-            auth : {
-                user : senderEmail,
-                pass : senderPassword
-            }
+        const response = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${resendApiKey}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                from: fromEmail,
+                to: email,
+                subject,
+                html,
+            }),
         });
 
-        const options = {
-            from : senderEmail,
-            to : email,
-            subject : subject,
-            html : template
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            console.error("sendMail fail:", {
+                status: response.status,
+                error: result,
+            });
+            throw new Error(result.message || `Resend request failed with status ${response.status}`);
         }
 
-        try {
-            await config.sendMail(options);
-            console.log("sendMail success");
-        } catch (error) {
-            console.error("sendMail fail:", error.message);
-            throw error;
-        }
-
+        console.log("sendMail success:", result);
         return { success: true };
 
     } catch (error) {
