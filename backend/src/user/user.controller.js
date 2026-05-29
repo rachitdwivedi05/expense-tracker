@@ -110,25 +110,26 @@ export const logout = async (req, res) => {
 }
 
 export const forgotPassword = async (req, res) => {
-    try {
-        const {email} = req.body;
-        const user = await UserModel.findOne({email});
-        if(!user){
-            return res.status(404).json({message: "user not found !"});
-        }
-        const token = await jwt.sign({Id: user._id}, forgotTokenSecret, {expiresIn: '15m'});
-        const frontendUrl = clientUrl
-            .split(",")[0]
-            .trim();
-        const link = `${frontendUrl}/forgot-password?token=${token}`;
-        const sent = await sendMail(
-            email,
-           "Expense - Forgot Password ?", forgotPasswordTemplate(user.fullname, link)
-        );
-        if(!sent.success){
-            return res.status(500).json({message: sent.error || "Failed to send email !"});
-        }
-        res.json({message: "Please check your email for reset link"});
+  try {
+
+    const { email } = req.body;
+
+    console.log("DB NAME:", UserModel.db.name);
+
+    const totalUsers = await UserModel.countDocuments();
+    console.log("TOTAL USERS:", totalUsers);
+
+    const user = await UserModel.findOne({ email });
+
+    console.log("EMAIL:", email);
+    console.log("FOUND USER:", user);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "user not found !"
+      });
+    }
+
         
       } catch (error) {
         res.status(500).json({ error: error.message });
