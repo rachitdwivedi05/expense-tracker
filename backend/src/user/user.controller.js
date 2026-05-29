@@ -72,9 +72,13 @@ export const login = async (req, res) => {
             return  res.status(401).json({message: "incorrect password !"});
 
         const token = await createToken(user);
-        console.log("LOGIN TOKEN:", token);
+        console.log("NODE_ENV:", process.env.NODE_ENV);
+        console.log("ENVIRONMENT:", process.env.ENVIRONMENT);
+        console.log("CLIENT_URL:", process.env.CLIENT_URL);
+        console.log("ORIGIN:", req.headers.origin);
+        console.log("XF_PROTO:", req.headers["x-forwarded-proto"]);
+        console.log("COOKIE OPTIONS:", getAuthCookieOptions(req));
         res.cookie('auth_token', token, getAuthCookieOptions(req));
-        console.log("SET COOKIE auth_token");
         res.json({message: "login successful", role: user.role});
         
       } catch (error) {

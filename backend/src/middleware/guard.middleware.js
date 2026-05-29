@@ -29,23 +29,18 @@ const invalid = async (req, res) => {
 
 export const AdminUserGuard = async (req, res, next) => {  
     try {
-    console.log("REQ HEADERS COOKIE:", req.headers.cookie);
-    console.log("REQ COOKIES:", req.cookies);
     const {auth_token} = req.cookies;
-    console.log("AUTH TOKEN:", req.cookies?.auth_token);
     if(!auth_token)
      return invalid(req, res);   
 
     const payload = await jwt.verify(auth_token, jwtSecret);
-    console.log("JWT PAYLOAD:", payload);
     
     if(payload.role !== "user" && payload.role !== "admin")
         return invalid(req, res);
 
     req.user = payload;
     next();
-    } catch (error) {
-        console.log("JWT VERIFY ERROR:", error.message);
+    } catch {
         return invalid(req, res);
     }
    

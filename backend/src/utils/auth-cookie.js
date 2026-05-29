@@ -13,6 +13,7 @@ export const getAuthCookieOptions = (req, maxAge = 86400000) => {
     httpOnly: true,
     secure,
     sameSite: secure ? "none" : "lax",
+    partitioned: secure,
     path: "/",
     maxAge,
   };
