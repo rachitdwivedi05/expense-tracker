@@ -5,7 +5,8 @@ import { sendMail } from '../utils/mail.js';
 import { otpTemplate } from '../utils/otp.template.js';
 import { generateOTP } from '../utils/generate.otp.js';
 import { forgotPasswordTemplate } from '../utils/forgot-template.js';
-import { clientUrl, forgotTokenSecret, isProduction, jwtSecret } from '../config/env.js';
+import { clientUrl, forgotTokenSecret, jwtSecret } from '../config/env.js';
+import { getAuthCookieOptions, getClearAuthCookieOptions } from '../utils/auth-cookie.js';
 // import { use } from 'react';
 
 
@@ -29,14 +30,7 @@ export const createUser = async (req, res) => {
         const user = new UserModel(data);
         await user.save();
         const token = await createToken(user);
-        res.cookie('auth_token', token, {
-          httpOnly: true,
-          secure: isProduction,
-          sameSite : isProduction ? "none" : "lax",
-          path : "/",
-          domain: undefined,
-          maxAge: 86400000,
-        });
+        res.cookie('auth_token', token, getAuthCookieOptions(req));
         res.json({message: "signup successful", role: user.role});
       } catch (error) {
         res.status(500).json({ error: error.message });
@@ -79,14 +73,7 @@ export const login = async (req, res) => {
 
         const token = await createToken(user);
         console.log("LOGIN TOKEN:", token);
-        res.cookie('auth_token', token, {
-          httpOnly: true,
-          secure: isProduction,
-          sameSite : isProduction ? "none" : "lax",
-          path : "/",
-          domain: undefined,
-          maxAge: 86400000,
-        });
+        res.cookie('auth_token', token, getAuthCookieOptions(req));
         console.log("SET COOKIE auth_token");
         res.json({message: "login successful", role: user.role});
         
@@ -97,14 +84,7 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
     try {
-        res.cookie("auth_token", null, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? "none" : "lax",
-        path : "/",
-        domain: undefined,
-        maxAge: 0,
-    });
+        res.clearCookie("auth_token", getClearAuthCookieOptions(req));
     res.status(200).json({message: "Logout successful"});
       } catch (error) {
         res.status(401).json({ message: error.message || "Logout Failed"});

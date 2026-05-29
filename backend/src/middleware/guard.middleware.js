@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
-import { forgotTokenSecret, isProduction, jwtSecret } from "../config/env.js";
+import { forgotTokenSecret, jwtSecret } from "../config/env.js";
+import { getClearAuthCookieOptions } from "../utils/auth-cookie.js";
 
 export const verifyTokenGuard = async (req, res, next) => {
     try {
@@ -21,15 +22,8 @@ export const verifyTokenGuard = async (req, res, next) => {
     }
 }
 
-const invalid = async (res) => {
-    res.cookie("auth_token", null, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? "none" : "lax",
-        path : "/",
-        domain: undefined,
-        maxAge: 0,
-    })
+const invalid = async (req, res) => {
+    res.clearCookie("auth_token", getClearAuthCookieOptions(req));
     return res.status(400).json({message: "Bad request"});
 }
 
@@ -40,19 +34,19 @@ export const AdminUserGuard = async (req, res, next) => {
     const {auth_token} = req.cookies;
     console.log("AUTH TOKEN:", req.cookies?.auth_token);
     if(!auth_token)
-     return invalid(res);   
+     return invalid(req, res);   
 
     const payload = await jwt.verify(auth_token, jwtSecret);
     console.log("JWT PAYLOAD:", payload);
     
     if(payload.role !== "user" && payload.role !== "admin")
-        return invalid(res);
+        return invalid(req, res);
 
     req.user = payload;
     next();
     } catch (error) {
         console.log("JWT VERIFY ERROR:", error.message);
-        return invalid(res);
+        return invalid(req, res);
     }
    
 }
@@ -62,18 +56,18 @@ export const AdminGuard = async (req, res, next) => {
     try {
     const {auth_token} = req.cookies;
     if(!auth_token)
-     return invalid(res);   
+     return invalid(req, res);   
 
     const payload = await jwt.verify(auth_token, jwtSecret);
     
     
     if( payload.role !== "admin")
-        return invalid(res);
+        return invalid(req, res);
 
     req.user = payload;
     next();
     } catch {
-        return invalid(res);
+        return invalid(req, res);
     }
    
 }
