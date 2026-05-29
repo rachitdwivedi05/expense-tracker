@@ -111,6 +111,7 @@ export const logout = async (req, res) => {
 
 export const forgotPassword = async (req, res) => {
   try {
+    console.log("forgot-password start");
 
     const email = req.body.email?.trim();
 
@@ -118,27 +119,54 @@ export const forgotPassword = async (req, res) => {
     console.log("DB NAME:", UserModel.db.name);
     console.log("COLLECTION NAME:", UserModel.collection.name);
 
+    console.log("before listCollections");
     const collections = await UserModel.db.db.listCollections().toArray();
     console.log("COLLECTIONS:", collections.map((collection) => collection.name));
 
+    console.log("before countDocuments");
     const totalUsers = await UserModel.countDocuments();
     console.log("TOTAL USERS:", totalUsers);
 
+    console.log("before find all users");
     const allUsers = await UserModel.find({}, { email: 1, fullname: 1 }).limit(10).lean();
     console.log("ALL USERS:", allUsers);
 
+    console.log("before findOne user");
     const user = await UserModel.findOne({ email });
 
     console.log("EMAIL:", email);
     console.log("FOUND USER:", user);
 
     if (!user) {
-      return res.status(404).json({
+      const response = res.status(404).json({
         message: "user not found !"
       });
+      console.log("forgot-password response sent");
+      return response;
     }
 
-        
+    console.log("user found");
+
+    const token = jwt.sign({ Id: user._id }, forgotTokenSecret, { expiresIn: "1h" });
+    const resetLink = `${clientUrl}/forgot-password?token=${token}`;
+
+    console.log("before sendMail");
+    const sent = await sendMail(
+      email,
+      "Reset Your Password",
+      forgotPasswordTemplate(user.fullname, resetLink)
+    );
+    console.log("after sendMail");
+
+    if (!sent.success) {
+      const response = res.status(500).json({ message: "Failed to send reset email" });
+      console.log("forgot-password response sent");
+      return response;
+    }
+
+    res.json({ message: "Password reset link sent successfully" });
+    console.log("forgot-password response sent");
+
       } catch (error) {
         res.status(500).json({ error: error.message });
     }
