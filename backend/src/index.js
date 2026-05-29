@@ -28,8 +28,14 @@ const app = express();
 
 
 app.use(cookieParser());
-const localOrigins = ["http://localhost:5173", "http://localhost:5180", "http://127.0.0.1:5173", "http://127.0.0.1:5180"];
-const allowedOrigins = getClientOrigins().concat(isProduction ? [] : localOrigins);
+const allowedOrigins = getClientOrigins()
+    .map((origin) => {
+        try {
+            return new URL(origin).origin;
+        } catch {
+            return origin;
+        }
+    });
 const allowedMethods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"];
 
 const isAllowedOrigin = (origin) => {
@@ -38,8 +44,15 @@ const isAllowedOrigin = (origin) => {
     try {
         const { hostname } = new URL(origin);
 
-        // Allow configured production domains and Vercel preview redeploy URLs.
-        return allowedOrigins.includes(origin) || hostname === "vercel.app" || hostname.endsWith(".vercel.app");
+        // Allow configured production domains, local development, and Vercel preview redeploy URLs.
+        return (
+            allowedOrigins.includes(new URL(origin).origin) ||
+            hostname === "localhost" ||
+            hostname === "127.0.0.1" ||
+            hostname === "::1" ||
+            hostname === "vercel.app" ||
+            hostname.endsWith(".vercel.app")
+        );
     } catch {
         return false;
     }
@@ -60,7 +73,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 
 app.use(morgan('dev'));
