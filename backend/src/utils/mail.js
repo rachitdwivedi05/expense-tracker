@@ -12,23 +12,14 @@ export const sendMail = async (email, subject, template) => {
 
         const config = nodemailer.createTransport({
             service : "gmail",
-            connectionTimeout: 10000,
-            greetingTimeout: 10000,
-            socketTimeout: 15000,
+            connectionTimeout: 30000,
+            greetingTimeout: 30000,
+            socketTimeout: 30000,
             auth : {
                 user : senderEmail,
                 pass : senderPassword
             }
         });
-
-        console.log("transporter verify start");
-        try {
-            await config.verify();
-            console.log("transporter verify success");
-        } catch (error) {
-            console.error("transporter verify fail:", error.message);
-            throw error;
-        }
 
         const options = {
             from : senderEmail,
