@@ -9,7 +9,7 @@ import { Button, Image, Layout, Menu, theme } from "antd";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useState } from "react";
-import http, { apiUrl, credentialsConfig } from "../../../utils/http";
+import http, { apiUrl } from "../../../utils/http";
 
 const { Sider, Content, Header } = Layout;
 
@@ -34,7 +34,10 @@ const Userlayout = () => {
 
     try {
       setLoading(true);
-      await http.get(apiUrl("/api/user/logout"), credentialsConfig);
+      await http.get(apiUrl("/api/user/logout"));
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      sessionStorage.removeItem("userInfo");
       navigate("/");
     } catch (err) {
       toast.error(err.response ? err.response.data.message : err.message);

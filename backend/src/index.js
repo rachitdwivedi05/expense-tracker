@@ -1,6 +1,5 @@
 import express from 'express';
 import userRouter from './user/user.routes.js';
-import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import TransactionRouter from './transaction/transaction.route.js';
 import DashboardRouter from './dashboard/dashboard.route.js';
@@ -26,8 +25,6 @@ const app = express();
 
 app.set("trust proxy", 1);
 
-
-app.use(cookieParser());
 const allowedOrigins = getClientOrigins()
     .map((origin) => {
         try {

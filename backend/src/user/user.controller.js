@@ -6,7 +6,6 @@ import { otpTemplate } from '../utils/otp.template.js';
 import { generateOTP } from '../utils/generate.otp.js';
 import { forgotPasswordTemplate } from '../utils/forgot-template.js';
 import { clientUrl, forgotTokenSecret, jwtSecret } from '../config/env.js';
-import { getAuthCookieOptions, getClearAuthCookieOptions } from '../utils/auth-cookie.js';
 // import { use } from 'react';
 
 
@@ -30,8 +29,7 @@ export const createUser = async (req, res) => {
         const user = new UserModel(data);
         await user.save();
         const token = await createToken(user);
-        res.cookie('auth_token', token, getAuthCookieOptions(req));
-        res.json({message: "signup successful", role: user.role});
+        res.json({message: "signup successful", role: user.role, token});
       } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -72,14 +70,7 @@ export const login = async (req, res) => {
             return  res.status(401).json({message: "incorrect password !"});
 
         const token = await createToken(user);
-        console.log("NODE_ENV:", process.env.NODE_ENV);
-        console.log("ENVIRONMENT:", process.env.ENVIRONMENT);
-        console.log("CLIENT_URL:", process.env.CLIENT_URL);
-        console.log("ORIGIN:", req.headers.origin);
-        console.log("XF_PROTO:", req.headers["x-forwarded-proto"]);
-        console.log("COOKIE OPTIONS:", getAuthCookieOptions(req));
-        res.cookie('auth_token', token, getAuthCookieOptions(req));
-        res.json({message: "login successful", role: user.role});
+        res.json({message: "login successful", role: user.role, token});
         
       } catch (error) {
         res.status(500).json({ error: error.message });
@@ -88,8 +79,7 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
     try {
-        res.clearCookie("auth_token", getClearAuthCookieOptions(req));
-    res.status(200).json({message: "Logout successful"});
+        res.status(200).json({message: "Logout successful"});
       } catch (error) {
         res.status(401).json({ message: error.message || "Logout Failed"});
     }
