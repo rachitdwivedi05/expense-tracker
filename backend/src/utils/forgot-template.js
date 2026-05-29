@@ -1,7 +1,7 @@
-import { emailUser } from "../config/env.js";
+import { fromEmail } from "../config/env.js";
 
 export const forgotPasswordTemplate = (fullname,link) => {
-    const supportEmail = emailUser || "";
+    const supportEmail = fromEmail || "";
 
     return `
     
