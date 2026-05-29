@@ -23,6 +23,26 @@ export const getClientOrigins = () =>
     .map((origin) => origin.trim())
     .filter(Boolean);
 
+export const getMongoUriDebugInfo = () => {
+  try {
+    const uri = new URL(mongoUri);
+
+    return {
+      host: uri.host,
+      db: uri.pathname.replace("/", "") || "(default)",
+      appName: uri.searchParams.get("appName") || "(none)",
+      source: env.MONGO_URI ? "MONGO_URI" : "DB_URL",
+    };
+  } catch {
+    return {
+      host: "(invalid uri)",
+      db: "(invalid uri)",
+      appName: "(invalid uri)",
+      source: env.MONGO_URI ? "MONGO_URI" : "DB_URL",
+    };
+  }
+};
+
 export const assertRequiredEnv = () => {
   const missing = Object.entries(requiredEnv)
     .filter(([, value]) => !value)

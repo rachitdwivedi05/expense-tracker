@@ -38,13 +38,13 @@ const userSchema = new Schema({
         default : "user",
         enum: ["user", "admin"]
     }
-},{timestamps: true});
+}, { timestamps: true, collection: "users" });
 
 userSchema.pre('save',async function(){
     const hashedPassword = await bcrypt.hash(this.password.toString(), 12);  
     this.password = hashedPassword;
  }); 
 
-const UserModel = model('User',userSchema);
+const UserModel = model('User', userSchema);
 
 export default UserModel;

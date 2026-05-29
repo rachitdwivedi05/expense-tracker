@@ -5,7 +5,7 @@ import { sendMail } from '../utils/mail.js';
 import { otpTemplate } from '../utils/otp.template.js';
 import { generateOTP } from '../utils/generate.otp.js';
 import { forgotPasswordTemplate } from '../utils/forgot-template.js';
-import { clientUrl, forgotTokenSecret, isProduction, jwtSecret } from '../config/env.js';
+import { clientUrl, forgotTokenSecret, getMongoUriDebugInfo, isProduction, jwtSecret } from '../config/env.js';
 // import { use } from 'react';
 
 
@@ -112,12 +112,20 @@ export const logout = async (req, res) => {
 export const forgotPassword = async (req, res) => {
   try {
 
-    const { email } = req.body;
+    const email = req.body.email?.trim();
 
+    console.log("MONGO URI DB:", getMongoUriDebugInfo());
     console.log("DB NAME:", UserModel.db.name);
+    console.log("COLLECTION NAME:", UserModel.collection.name);
+
+    const collections = await UserModel.db.db.listCollections().toArray();
+    console.log("COLLECTIONS:", collections.map((collection) => collection.name));
 
     const totalUsers = await UserModel.countDocuments();
     console.log("TOTAL USERS:", totalUsers);
+
+    const allUsers = await UserModel.find({}, { email: 1, fullname: 1 }).limit(10).lean();
+    console.log("ALL USERS:", allUsers);
 
     const user = await UserModel.findOne({ email });
 

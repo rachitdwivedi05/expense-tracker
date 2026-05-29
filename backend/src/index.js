@@ -4,10 +4,11 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import TransactionRouter from './transaction/transaction.route.js';
 import DashboardRouter from './dashboard/dashboard.route.js';
-import { assertRequiredEnv, getClientOrigins, isProduction, mongoUri } from './config/env.js';
+import { assertRequiredEnv, getClientOrigins, getMongoUriDebugInfo, isProduction, mongoUri } from './config/env.js';
 
 assertRequiredEnv();
 console.log("this file running");
+console.log("MONGO URI DB:", getMongoUriDebugInfo());
 
 // database connection
 import mongoose from 'mongoose';
@@ -15,7 +16,18 @@ import mongoose from 'mongoose';
 mongoose.connect(mongoUri, {
     serverSelectionTimeoutMS: 10000,
 })
-.then(() => console.log("database connected"))
+.then(async () => {
+    console.log("database connected");
+    console.log("DB NAME:", mongoose.connection.name);
+    console.log("MONGOOSE CONNECTIONS:", mongoose.connections.map((connection) => ({
+        name: connection.name,
+        readyState: connection.readyState,
+        host: connection.host,
+    })));
+
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    console.log("COLLECTIONS:", collections.map((collection) => collection.name));
+})
 .catch((error) => console.error("database not connected:", error.message));
 
 
