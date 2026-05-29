@@ -1,6 +1,5 @@
 export const sendMail = async (email, subject, html) => {
     try {
-        console.log("sendMail start");
         const resendApiKey = process.env.RESEND_API_KEY?.trim();
         const fromEmail = process.env.FROM_EMAIL?.trim();
 
