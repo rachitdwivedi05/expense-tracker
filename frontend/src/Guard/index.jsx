@@ -12,7 +12,14 @@ const Guard = ({endpoint,role,children}) => {
     useEffect(() => {
         const verifyToken = async() => {
             try {
-                const {data} = await http.get(apiUrl(endpoint));
+                const token = localStorage.getItem("token");
+                if (!token) throw new Error("Missing token");
+
+                const {data} = await http.get(apiUrl(endpoint), {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
             sessionStorage.setItem("userInfo", JSON.stringify(data));
             setUser(data?.role);
             setLoader(false);
