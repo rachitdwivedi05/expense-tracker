@@ -1,5 +1,7 @@
 import axios from "axios";
 
+axios.defaults.withCredentials = true;
+
 // Vite exposes only VITE_* variables to the browser; Vercel injects this at build time.
 const configuredApiUrl = import.meta.env.VITE_API_URL;
 
@@ -12,10 +14,11 @@ export const API_BASE_URL = (configuredApiUrl || fallbackApiUrl).replace(/\/+$/,
 
 // Builds absolute backend URLs so Vercel never handles API requests as frontend routes.
 export const apiUrl = (path) => `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+export const credentialsConfig = { withCredentials: true };
 
 const http = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true
+  withCredentials: true,
 });
 
 export default http;

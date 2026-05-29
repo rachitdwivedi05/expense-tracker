@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 // 1. Toast import karein
 import { toast } from "react-toastify";
-import http, { apiUrl } from "../../../utils/http";
+import http, { apiUrl, credentialsConfig } from "../../../utils/http";
 
 
 const Signup = () => {
@@ -43,7 +43,7 @@ const onSignup = async (values) => {
         if(Number(values.otp) !== Number(otp))
             return toast.error("OTP not match");
         setLoading(true);
-        const { data } = await http.post(apiUrl("/api/user/signup"), formData);
+        const { data } = await http.post(apiUrl("/api/user/signup"), formData, credentialsConfig);
         toast.success("Signup success");
         setOtp(null);
         setFormData(null);

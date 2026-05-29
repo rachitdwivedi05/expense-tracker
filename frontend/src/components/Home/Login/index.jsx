@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import http, { apiUrl } from "../../../utils/http";
+import http, { apiUrl, credentialsConfig } from "../../../utils/http";
 
 
 const Login = () => {
@@ -21,7 +21,7 @@ const Login = () => {
   const onFinish = async (values) => {
     try {
       setLoading(true);
-      const { data } = await http.post(apiUrl("/api/user/login"), values);
+      const { data } = await http.post(apiUrl("/api/user/login"), values, credentialsConfig);
       const {role} = data;
       if (role=== "admin")
         return navigate("/app/admin/dashboard");
