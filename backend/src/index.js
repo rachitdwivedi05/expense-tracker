@@ -33,6 +33,7 @@ const allowedOrigins = getClientOrigins()
             return origin;
         }
     });
+allowedOrigins.push("https://expense-tracker-leidsmxoz-rachit-dwivedi-s-projects.vercel.app");
 const allowedMethods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"];
 
 const isAllowedOrigin = (origin) => {
@@ -63,6 +64,7 @@ const corsOptions = {
 
         return callback(new Error("Not allowed by CORS"));
     },
+    credentials: true,
     methods: allowedMethods,
     allowedHeaders: ["Content-Type", "Authorization"],
     optionsSuccessStatus: 204,
