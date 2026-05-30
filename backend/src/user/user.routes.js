@@ -1,5 +1,5 @@
 import {Router} from 'express';
-import { createUser, login, sendEmail, verifyToken, changePassword, logout, getAllUsers, updateStatus } from './user.controller.js';
+import { createUser, login, sendEmail, verifyToken, changePassword, logout, getAllUsers, updateStatus, session } from './user.controller.js';
 import { forgotPassword } from './user.controller.js';
 import { AdminUserGuard, verifyTokenGuard, AdminGuard } from '../middleware/guard.middleware.js';
 
@@ -33,7 +33,6 @@ userRouter.post("/verify-token",verifyTokenGuard, verifyToken);
 userRouter.put("/change-password",verifyTokenGuard, changePassword);
 
 // @GET api/user/session
-userRouter.get("/session",AdminUserGuard, (req, res) => {return res.json(req.user);
-});
+userRouter.get("/session", AdminUserGuard, session);
 
 export default userRouter;

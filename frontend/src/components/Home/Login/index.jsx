@@ -22,12 +22,13 @@ const Login = () => {
     try {
       setLoading(true);
       const { data } = await http.post(apiUrl("/api/user/login"), values);
-      const {role, token} = data;
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-      if (role=== "admin")
+      console.log("LOGIN RESPONSE", data);
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("role", data.role);
+      console.log("TOKEN SAVED", localStorage.getItem("token"));
+      if (data.role === "admin")
         return navigate("/app/admin/dashboard");
-      if(role === "user")
+      if(data.role === "user")
          return navigate("/app/user/dashboard");
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to send OTP");

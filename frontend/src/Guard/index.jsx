@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import http, { apiUrl } from "../utils/http";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import Loader from "../components/Shared/Loader";
 
 const Guard = ({endpoint,role,children}) => {

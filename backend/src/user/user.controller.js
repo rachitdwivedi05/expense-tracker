@@ -70,6 +70,7 @@ export const login = async (req, res) => {
             return  res.status(401).json({message: "incorrect password !"});
 
         const token = await createToken(user);
+        console.log("LOGIN SUCCESS", { userId: user._id, role: user.role });
         res.json({message: "login successful", role: user.role, token});
         
       } catch (error) {
@@ -83,6 +84,10 @@ export const logout = async (req, res) => {
       } catch (error) {
         res.status(401).json({ message: error.message || "Logout Failed"});
     }
+}
+
+export const session = async (req, res) => {
+    res.json(req.user);
 }
 
 export const forgotPassword = async (req, res) => {

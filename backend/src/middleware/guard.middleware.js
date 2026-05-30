@@ -5,8 +5,8 @@ const getBearerToken = (req) => {
     const authorization = req.headers['authorization'];
     if(!authorization) return null;
 
-    const [type, token] = authorization.split(" ");
-    if(type !== "Bearer" || !token) return null;
+    const [type, token] = authorization.trim().split(/\s+/);
+    if(type?.toLowerCase() !== "bearer" || !token) return null;
 
     return token;
 }
@@ -30,13 +30,19 @@ const invalid = async (res) => {
     return res.status(400).json({message: "Bad request"});
 }
 
+const unauthorized = async (res) => {
+    return res.status(401).json({message: "Invalid or expired token"});
+}
+
 export const AdminUserGuard = async (req, res, next) => {  
     try {
+    console.log("AUTH HEADER", req.headers.authorization);
     const token = getBearerToken(req);
     if(!token)
      return invalid(res);
 
     const payload = await jwt.verify(token, jwtSecret);
+    console.log("SESSION USER", payload);
     
     if(payload.role !== "user" && payload.role !== "admin")
         return invalid(res);
@@ -44,7 +50,7 @@ export const AdminUserGuard = async (req, res, next) => {
     req.user = payload;
     next();
     } catch {
-        return invalid(res);
+        return unauthorized(res);
     }
    
 }
@@ -65,7 +71,7 @@ export const AdminGuard = async (req, res, next) => {
     req.user = payload;
     next();
     } catch {
-        return invalid(res);
+        return unauthorized(res);
     }
    
 }
